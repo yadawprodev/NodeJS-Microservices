@@ -12,6 +12,8 @@ services:
     environment:
       - REDIS_URL=redis://redis:6379
       - RABBITMQ_URL=amqp://rabbitmq:5672
+    networks:
+      - app-network
 
   user-service:
     build: ./user-service
@@ -19,9 +21,12 @@ services:
     depends_on:
       - redis
       - rabbitmq
+      - mongodb
     environment:
       - REDIS_URL=redis://redis:6379
       - RABBITMQ_URL=amqp://rabbitmq:5672
+    networks:
+      - app-network
 
   post-service:
     build: ./post-service
@@ -29,9 +34,12 @@ services:
     depends_on:
       - redis
       - rabbitmq
+      - mongodb
     environment:
       - REDIS_URL=redis://redis:6379
       - RABBITMQ_URL=amqp://rabbitmq:5672
+    networks:
+      - app-network
 
   media-service:
     build: ./media-service
@@ -42,6 +50,8 @@ services:
     environment:
       - REDIS_URL=redis://redis:6379
       - RABBITMQ_URL=amqp://rabbitmq:5672
+    networks:
+      - app-network
 
   search-service:
     build: ./search-service
@@ -49,22 +59,39 @@ services:
     depends_on:
       - redis
       - rabbitmq
+      - mongodb
     environment:
       - REDIS_URL=redis://redis:6379
       - RABBITMQ_URL=amqp://rabbitmq:5672
+    networks:
+      - app-network
 
   redis:
     image: redis:alpine
     ports:
       - '6379:6379'
+    networks:
+      - app-network
 
   rabbitmq:
     image: rabbitmq:3-management
     ports:
       - '5672:5672'
       - '15672:15672'
-    healthcheck:
-      test: ['CMD', 'rabbitmq-diagnostics', '-q', 'ping']
-      interval: 30s
-      timeout: 10s
-      retries: 5
+    networks:
+      - app-network
+
+  mongodb:
+    image: mongo:7
+    ports:
+      - '27017:27017'
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - app-network
+
+volumes:
+  mongo-data:
+
+networks:
+  app-network:
